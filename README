@@ -1,0 +1,13 @@
+My Friendly Shell :)
+====================================================================================================================================================
+
+[] Proper CD function
+[] Show PWD
+[] Show hostname
+[] Show current user
+[] Browse history with keys
+[] Colors
+[] Implement a TOML file to handle customization
+[] Hide password with SU
+[] Be able to execute nano
+[] Be able to execute NCDU
