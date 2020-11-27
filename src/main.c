@@ -11,7 +11,7 @@
 /*  delimiters to be used in strtok() function */
 #define TOKEN_DELIMITER " \t\r\n\a"
 /* delimiters to be used in pipes strtok() function */
-#define PIPE_DELIMITER " |"
+#define PIPE_DELIMITER "|"
 
 /* we declare these because we going to use pointers to their location before
  * actually using them */
@@ -91,15 +91,49 @@ char *mfs_read_line(void) {
                                 exit(EXIT_FAILURE);
                         }
                 }
-                printf("%s\n", buffer);
+                //                printf("%s\n", buffer);
         }
 }
+
+/* void mfs_pipe_line(char *line) {
+        int bufsize = TOKEN_BUFSIZE;
+        char *testtk;
+        char **tkkz = malloc(bufsize * sizeof(char *));
+        int kekw = 0;
+        int pos2 = 0;
+        int buf2 = TOKEN_BUFSIZE;
+        int keke = 0;
+        printf("Catching line before tokenization: %s\n", line);
+
+        testtk = strtok(line, PIPE_DELIMITER);
+        while (testtk != NULL) {
+                tkkz[pos2] = testtk;
+
+                if (pos2 >= buf2) {
+                        buf2 += TOKEN_BUFSIZE;
+                        tkkz = realloc(tkkz, bufsize * sizeof(char *));
+                        if (!tkkz) {
+                                fprintf(stderr, "test failed broskis\n");
+                                exit(EXIT_FAILURE);
+                        }
+                }
+
+                printf("pre pike token:%s\n", testtk);
+                testtk = strtok(NULL, PIPE_DELIMITER);
+        }
+        //        printf("Pipe token: %s\n", tkkz);
+
+        while (tkkz[keke] != NULL) {
+                printf("Pipe token:%s\n", tkkz[keke]);
+                keke++;
+        }
+}*/
 
 char **mfs_split_line(char *line) {
         int bufsize = TOKEN_BUFSIZE, position = 0;
         char **tokens = malloc(bufsize * sizeof(char *));
         char *token;
-
+        int kenke = 0;
         /* le allocation error */
         if (!tokens) {
                 fprintf(stderr, "MFS: allocation error\n");
@@ -122,6 +156,10 @@ char **mfs_split_line(char *line) {
                 /* dont forget to do a printf in this area to see how this
                  * function works */
                 token = strtok(NULL, TOKEN_DELIMITER);
+        }
+        while (kenke < position) {
+                printf("Tokenized test: %s\n", tokens[kenke]);
+                kenke++;
         }
         tokens[position] = NULL;
         return tokens;
@@ -170,16 +208,24 @@ int mfs_execute(char **args) {
 void mfs_loop(void) {
         char *line;
         char **args;
-        int status;
+        int status = 1;
+        int numparse = 0;
 
         do {
                 printf("mfs> ");
                 line = mfs_read_line();
+                while (line[numparse] != '\0') {
+                        printf("main loop:%c\n", line[numparse]);
+                        numparse++;
+                }
+
+                //             mfs_pipe_line(line);
                 args = mfs_split_line(line);
-                status = mfs_execute(args);
+                //                status = mfs_execute(args);
 
                 free(line);
                 free(args);
+
         } while (status);
 }
 
