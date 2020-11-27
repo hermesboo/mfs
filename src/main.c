@@ -12,6 +12,8 @@
 #define TOKEN_DELIMITER " \t\r\n\a"
 /* delimiters to be used in pipes strtok() function */
 #define PIPE_DELIMITER "|"
+/* pipe bufsize */
+#define PIPE_TK_BUFSIZE 1024
 
 /* we declare these because we going to use pointers to their location before
  * actually using them */
@@ -94,40 +96,65 @@ char *mfs_read_line(void) {
                 //                printf("%s\n", buffer);
         }
 }
+int parsing(char *line) {
+        int i = 0;
+        while (line[i] != '\0') {
+                printf("main loop:%c\n", line[i]);
+                if (line[i] == '|') {
+                        printf("hahahah u bitch\n");
+                        return 1;
+                }
+                i++;
+        }
+        return 0;
+}
 
-/* void mfs_pipe_line(char *line) {
-        int bufsize = TOKEN_BUFSIZE;
-        char *testtk;
-        char **tkkz = malloc(bufsize * sizeof(char *));
-        int kekw = 0;
-        int pos2 = 0;
-        int buf2 = TOKEN_BUFSIZE;
-        int keke = 0;
+char **pipe_split(char *line) {
+        /* pipe buffer size is bigger because bigger words 6head
+         * pposition stands for pipe position*/
+        int bufsize = PIPE_TK_BUFSIZE, pposition = 0;
+        /* fpipetks means final pipe tokens */
+        char **fpipetks = malloc(bufsize * sizeof(char *));
+        char *pipetk;
+        int testnum = 0;
+
         printf("Catching line before tokenization: %s\n", line);
 
-        testtk = strtok(line, PIPE_DELIMITER);
-        while (testtk != NULL) {
-                tkkz[pos2] = testtk;
+        /* standard allocation error :) */
+        if (!fpipetks) {
+                fprintf(stderr, "MFS: Pipe error\n");
+                exit(EXIT_FAILURE);
+        }
 
-                if (pos2 >= buf2) {
-                        buf2 += TOKEN_BUFSIZE;
-                        tkkz = realloc(tkkz, bufsize * sizeof(char *));
-                        if (!tkkz) {
-                                fprintf(stderr, "test failed broskis\n");
+        pipetk = strtok(line, PIPE_DELIMITER);
+        while (pipetk != NULL) {
+                fpipetks[pposition] = pipetk;
+                pposition++;
+
+                if (pposition >= bufsize) {
+                        bufsize += PIPE_TK_BUFSIZE;
+                        fpipetks = realloc(fpipetks, bufsize * sizeof(char *));
+                        if (!fpipetks) {
+                                fprintf(stderr, "MFS: Pipe allocation error\n");
                                 exit(EXIT_FAILURE);
                         }
                 }
-
-                printf("pre pike token:%s\n", testtk);
-                testtk = strtok(NULL, PIPE_DELIMITER);
+                pipetk = strtok(NULL, PIPE_DELIMITER);
         }
-        //        printf("Pipe token: %s\n", tkkz);
-
-        while (tkkz[keke] != NULL) {
-                printf("Pipe token:%s\n", tkkz[keke]);
-                keke++;
+        while (testnum < pposition) {
+                printf("PIpe tokenized:%s\n", fpipetks[testnum]);
+                testnum++;
         }
-}*/
+
+        fpipetks[pposition] = 0;
+        int chucha = 0;
+        while (chucha < pposition) {
+                printf("give me the ufcking :%s\n", fpipetks[chucha]);
+                chucha++;
+        }
+        printf("hahahah noooo ur so sexy aha:%s \n", fpipetks[2]);
+        return fpipetks;
+}
 
 char **mfs_split_line(char *line) {
         int bufsize = TOKEN_BUFSIZE, position = 0;
@@ -163,6 +190,46 @@ char **mfs_split_line(char *line) {
         }
         tokens[position] = NULL;
         return tokens;
+}
+
+int pipe_launch(char **args) {
+        int savestdin = dup(0);
+        int savestdout = dup(1);
+        int fd[2];
+        int argsize = sizeof(args) / sizeof(int);
+        char *ls[] = {"ls", 0};
+        char *wc[] = {"wc", "-l", 0};
+
+        printf("argument size:%d\n", argsize);
+
+        pid_t pid, wpid;
+        /* file descriptor piping */
+        pipe(fd);
+        pid = fork();
+
+        /* error handling */
+        if (pid == -1) {
+                perror("couldnt fork\n");
+        }
+
+        if (pid == 0) {  // child process
+                dup2(fd[1], 1);
+                close(fd[0]);
+                execvp(ls[0], ls);
+        } else {  // parent process
+                dup2(fd[0], 0);
+                close(fd[1]);
+                execvp(wc[0], wc);
+        }
+
+        printf("PID numb: %d\n", pid);
+
+        /* here we recover what was saved in stdin/stdout */
+        /*         dup2(savestdin, 0);
+                dup2(savestdout, 1);
+                close(savestdin);
+                close(savestdout);*/
+        return 1;
 }
 
 int mfs_launch(char **args) {
@@ -205,6 +272,21 @@ int mfs_execute(char **args) {
         return mfs_launch(args);
 }
 
+/* int pipe_exec(char **args) {
+        int i;
+        if (args[0] == NULL) {
+                // empty commands
+                return 1;
+        }
+
+        for (i = 0; i < mfs_num_builtins(); i++) {
+                if (strcmp(args[0], builtin_str[i]) == 0) {
+                        return (*builtin_func[i])(args);
+                }
+        }
+        return pipe_launch(args);
+}*/
+
 void mfs_loop(void) {
         char *line;
         char **args;
@@ -214,17 +296,22 @@ void mfs_loop(void) {
         do {
                 printf("mfs> ");
                 line = mfs_read_line();
-                while (line[numparse] != '\0') {
-                        printf("main loop:%c\n", line[numparse]);
-                        numparse++;
+                /* we parse the line before doing anything to have a more clean
+                 * and elegant solution */
+                numparse = parsing(line);
+                if (numparse == 1) {
+                        args = pipe_split(line);
+                        status = pipe_launch(args);
+                        free(line);
+                        free(args);
+
+                } else {
+                        //             mfs_pipe_line(line);
+                        args = mfs_split_line(line);
+                        status = mfs_execute(args);
+                        free(line);
+                        free(args);
                 }
-
-                //             mfs_pipe_line(line);
-                args = mfs_split_line(line);
-                //                status = mfs_execute(args);
-
-                free(line);
-                free(args);
 
         } while (status);
 }
