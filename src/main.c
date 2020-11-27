@@ -194,6 +194,11 @@ char **mfs_split_line(char *line) {
 
 int pipe_launch(char **args) {
         pid_t pid, wpid;
+
+        int pos;
+        FILE *chucha;
+        char jaja;
+
         int savestdin = dup(0);
         int savestdout = dup(1);
         int fd[2];
@@ -205,13 +210,21 @@ int pipe_launch(char **args) {
 
         int argsize = sizeof(args) / sizeof(int);
         printf("argument size:%d\n", argsize);
-        printf("argument size:%d\n", argsize);
 
-        /* file descriptor piping */
+        chucha = popen("echo \" wtf\" | lolcat", "r");
+
+        while ((jaja = fgetc(chucha)) != EOF) {
+                putchar(jaja);
+        }
+        pclose(chucha);
+        return 1;
+}
+
+/*
         pipe(fd);
         pid = fork();
 
-        /* error handling */
+         error handling
         if (pid == -1) {
                 perror("couldnt fork\n");
         }
@@ -228,13 +241,13 @@ int pipe_launch(char **args) {
 
         printf("PID numb: %d\n", pid);
 
-        /* here we recover what was saved in stdin/stdout */
-        /*         dup2(savestdin, 0);
+//         here we recover what was saved in stdin/stdout
+                 dup2(savestdin, 0);
                 dup2(savestdout, 1);
                 close(savestdin);
-                close(savestdout);*/
+                close(savestdout);
         return 1;
-}
+}*/
 
 int mfs_launch(char **args) {
         /* the type is pid_t and here we initialize 2 variables, pid and wpid */
