@@ -5,11 +5,13 @@
 #include <unistd.h>
 
 /* read line buffer size base */
-#define MFS_READLINE_BUFSIZE 1024
+#define READLINE_BUFSIZE 1024
 /* token buffer size */
-#define MFS_TOKEN_BUFSIZE 64
+#define TOKEN_BUFSIZE 64
 /*  delimiters to be used in strtok() function */
-#define MFS_TOKEN_DELIMITER " \t\r\n\a"
+#define TOKEN_DELIMITER " \t\r\n\a"
+/* delimiters to be used in pipes strtok() function */
+#define PIPE_DELIMITER " |"
 
 /* we declare these because we going to use pointers to their location before
  * actually using them */
@@ -52,7 +54,7 @@ int mfs_help(char **args) {
 int mfs_exit(char **args) { return 0; }
 
 char *mfs_read_line(void) {
-        int bufsize = MFS_READLINE_BUFSIZE;
+        int bufsize = READLINE_BUFSIZE;
         int position = 0;
         char *buffer = malloc(sizeof(char) * bufsize);
         int c;
@@ -66,8 +68,6 @@ char *mfs_read_line(void) {
         while (1) {
                 /* getting the characters */
                 c = getchar();
-
-                printf("%c\n", c);
 
                 /* if we get EOF || newline we replace it with a null character
                  * and return what has been read */
@@ -84,18 +84,19 @@ char *mfs_read_line(void) {
 
                 /* reallocate memory if we exceed the buffer size */
                 if (position >= bufsize) {
-                        bufsize += MFS_READLINE_BUFSIZE;
+                        bufsize += READLINE_BUFSIZE;
                         buffer = realloc(buffer, bufsize);
                         if (!buffer) {
                                 fprintf(stderr, "MFS: Allocation error\n");
                                 exit(EXIT_FAILURE);
                         }
                 }
+                printf("%s\n", buffer);
         }
 }
 
 char **mfs_split_line(char *line) {
-        int bufsize = MFS_TOKEN_BUFSIZE, position = 0;
+        int bufsize = TOKEN_BUFSIZE, position = 0;
         char **tokens = malloc(bufsize * sizeof(char *));
         char *token;
 
@@ -105,13 +106,13 @@ char **mfs_split_line(char *line) {
                 exit(EXIT_FAILURE);
         }
 
-        token = strtok(line, MFS_TOKEN_DELIMITER);
+        token = strtok(line, TOKEN_DELIMITER);
         while (token != NULL) {
                 tokens[position] = token;
                 position++;
 
                 if (position >= bufsize) {
-                        bufsize += MFS_TOKEN_BUFSIZE;
+                        bufsize += TOKEN_BUFSIZE;
                         tokens = realloc(tokens, bufsize * sizeof(char *));
                         if (!tokens) {
                                 fprintf(stderr, "MFS: allocation error\n");
@@ -120,7 +121,7 @@ char **mfs_split_line(char *line) {
                 }
                 /* dont forget to do a printf in this area to see how this
                  * function works */
-                token = strtok(NULL, MFS_TOKEN_DELIMITER);
+                token = strtok(NULL, TOKEN_DELIMITER);
         }
         tokens[position] = NULL;
         return tokens;
