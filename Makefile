@@ -1,4 +1,4 @@
-TARGET	=	xxx
+TARGET	=	mfs
 SRC		:=	src/main.c 
 
 #PREFIX ?=	/usr/local
@@ -17,4 +17,4 @@ $(TARGET): $(OBJ)
 #	install $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
 
 clean:
-	$(RM) ./xxx
+	$(RM) ./mfs
