@@ -193,16 +193,20 @@ char **mfs_split_line(char *line) {
 }
 
 int pipe_launch(char **args) {
+        pid_t pid, wpid;
         int savestdin = dup(0);
         int savestdout = dup(1);
         int fd[2];
-        int argsize = sizeof(args) / sizeof(int);
-        char *ls[] = {"ls", 0};
-        char *wc[] = {"wc", "-l", 0};
+        int fdd = 0;
+        char *bsh[] = {"bash", "--help", 0};
+        char *hd[] = {"head", "-7", 0};
+        char *tl[] = {"tail", "-5", 0};
+        char **cmd[] = {bsh, hd, tl, NULL};
 
+        int argsize = sizeof(args) / sizeof(int);
+        printf("argument size:%d\n", argsize);
         printf("argument size:%d\n", argsize);
 
-        pid_t pid, wpid;
         /* file descriptor piping */
         pipe(fd);
         pid = fork();
@@ -215,11 +219,11 @@ int pipe_launch(char **args) {
         if (pid == 0) {  // child process
                 dup2(fd[1], 1);
                 close(fd[0]);
-                execvp(ls[0], ls);
+                execvp(bsh[0], bsh);
         } else {  // parent process
                 dup2(fd[0], 0);
                 close(fd[1]);
-                execvp(wc[0], wc);
+                execvp(tl[0], tl);
         }
 
         printf("PID numb: %d\n", pid);
