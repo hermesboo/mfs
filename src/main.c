@@ -1,3 +1,5 @@
+#include <limits.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +17,11 @@
 /* pipe bufsize */
 #define PIPE_TK_BUFSIZE 1024
 
+/* colors */
+#define SKYBLUE "\033[38;5;74m"
+#define TEAL "\033[38;5;6m"
+#define RESET "\e[0m"
+
 /* we declare these because we going to use pointers to their location before
  * actually using them */
 int mfs_cd(char **args);
@@ -30,8 +37,11 @@ int mfs_num_builtins() { return sizeof(builtin_str) / sizeof(char *); }
 
 /* actual implementation of the builtins */
 int mfs_cd(char **args) {
+        uid_t uid = getuid();
+        struct passwd *pwd = getpwuid(uid);
         if (args[1] == NULL) {
-                fprintf(stderr, "MFS: Expected argument to \"cd\"\n");
+                chdir(pwd->pw_dir);
+                // fprintf(stderr, "MFS: Expected argument to \"cd\"\n");
         } else {
                 if (chdir(args[1]) != 0) {
                         perror("MFS CD");
@@ -44,7 +54,6 @@ int mfs_help(char **args) {
         int i;
         printf("My friendly shell :)\n");
         printf("Builtin commands are the following:\n");
-
         for (i = 0; i < mfs_num_builtins(); i++) {
                 printf("  %s\n", builtin_str[i]);
         }
@@ -192,42 +201,6 @@ char **mfs_split_line(char *line) {
         return tokens;
 }
 
-int pipe_launch(char **args) {
-        pid_t pid, wpid;
-        int fd[2];
-        int status;
-        int argsize = sizeof(args) / sizeof(int);
-        char *ls[] = {"ls", 0};
-        char *wc[] = {"wc", "-l", 0};
-
-        printf("argument size:%d\n", argsize);
-
-        /* file descriptor piping */
-        pipe(fd);
-        pid = fork();
-
-        int savestdin = dup(0), savestdout = dup(1);
-
-        /* error handling */
-        if (pid == -1) {
-                perror("couldnt fork\n");
-        }
-        if (pid == 0) {  // child process
-                dup2(fd[1], 1);
-                close(fd[0]);
-                close(fd[1]);
-                execvp(ls[0], ls);
-        } else {  // parent process
-                dup2(fd[0], 0);
-                close(fd[1]);
-                dup2(savestdout, STDOUT_FILENO); /* reconnect stdout */
-                execvp(wc[0], wc);
-                dup2(savestdin, STDIN_FILENO);
-        }
-        printf("PID numb: %d\n", pid);
-        return 1;
-}
-
 int mfs_launch(char **args) {
         /* the type is pid_t and here we initialize 2 variables, pid and wpid */
         pid_t pid, wpid;
@@ -268,41 +241,36 @@ int mfs_execute(char **args) {
         return mfs_launch(args);
 }
 
-/* int pipe_exec(char **args) {
-        int i;
-        if (args[0] == NULL) {
-                // empty commands
-                return 1;
-        }
-
-        for (i = 0; i < mfs_num_builtins(); i++) {
-                if (strcmp(args[0], builtin_str[i]) == 0) {
-                        return (*builtin_func[i])(args);
-                }
-        }
-        return pipe_launch(args);
-}*/
-
 void mfs_loop(void) {
         char *line;
         char **args;
         int status = 1;
         int numparse = 0;
-
+        uid_t uid = getuid();
+        struct passwd *pwd = getpwuid(uid);
+        char cwd[PATH_MAX];
+        char host[HOST_NAME_MAX + 1];
         do {
-                printf("mfs> ");
+                gethostname(host, HOST_NAME_MAX + 1);
+                getcwd(cwd, sizeof(cwd));
+
+                printf(TEAL "%s@%s" SKYBLUE " %s> " RESET, pwd->pw_name, host,
+                       cwd);
                 line = mfs_read_line();
                 /* we parse the line before doing anything to have a more clean
                  * and elegant solution */
                 numparse = parsing(line);
                 if (numparse == 1) {
-                        args = pipe_split(line);
+                        printf("Pipes not supported yet!\n");
+                        goto lfgb;
+                        /* args = pipe_split(line);
                         status = pipe_launch(args);
                         printf("status: %d", status);
                         free(line);
-                        free(args);
+                        free(args);*/
 
                 } else {
+                lfgb:
                         args = mfs_split_line(line);
                         status = mfs_execute(args);
                         free(line);

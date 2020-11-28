@@ -1,14 +1,15 @@
 My Friendly Shell :)
 ====================================================================================================================================================
 
-[] PIPING!
-[] Proper CD function
-[] Show PWD
-[] Show hostname
-[] Show current user
-[] Browse history with keys
-[] Colors
-[] Implement a TOML file to handle customization
+[0] PIPING!
+[x] Proper CD function
+[x] Show PWD
+[x] Show hostname
+[x] Show current user
+[x] Colors
 [x] Hide password with SU
 [x] Be able to execute nano
 [x] Be able to execute NCDU
+[] Implement a TOML file to handle customization
+[] Browse history with keys
+[] Key functionality
