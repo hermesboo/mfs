@@ -194,66 +194,51 @@ char **mfs_split_line(char *line) {
 
 int pipe_launch(char **args) {
         pid_t pid, wpid;
-
-        int pos;
-        FILE *chucha;
-        char jaja;
-
+        int fd[2];
+        int status;
+        int argsize = sizeof(args) / sizeof(int);
         int savestdin = dup(0);
         int savestdout = dup(1);
-        int fd[2];
-        int fdd = 0;
-        char *bsh[] = {"bash", "--help", 0};
-        char *hd[] = {"head", "-7", 0};
-        char *tl[] = {"tail", "-5", 0};
-        char **cmd[] = {bsh, hd, tl, NULL};
+        char *ls[] = {"ls", 0};
+        char *wc[] = {"wc", "-l", 0};
 
-        int argsize = sizeof(args) / sizeof(int);
         printf("argument size:%d\n", argsize);
 
-        chucha = popen("ls | lolcat", "r");
-
-        while ((jaja = fgetc(chucha)) != EOF) {
-                putchar(jaja);
-        }
-        pclose(chucha);
-        return 1;
-}
-
-/*
+        /* file descriptor piping */
         pipe(fd);
         pid = fork();
 
-         error handling
+        /* error handling */
         if (pid == -1) {
                 perror("couldnt fork\n");
         }
-
         if (pid == 0) {  // child process
                 dup2(fd[1], 1);
                 close(fd[0]);
-                execvp(bsh[0], bsh);
+                close(fd[1]);
+                execvp(ls[0], ls);
+                return 1;
         } else {  // parent process
                 dup2(fd[0], 0);
                 close(fd[1]);
-                execvp(tl[0], tl);
-        }
+                close(fd[0]);
 
-        printf("PID numb: %d\n", pid);
-
-//         here we recover what was saved in stdin/stdout
-                 dup2(savestdin, 0);
                 dup2(savestdout, 1);
-                close(savestdin);
-                close(savestdout);
+                dup2(savestdin, 0);
+                printf("testing this bitch\n");
+                execvp(wc[0], wc);
+        }
+        printf("PID numb: %d\n", pid);
+        close(savestdin);
+        close(savestdout);
+
         return 1;
-}*/
+}
 
 int mfs_launch(char **args) {
         /* the type is pid_t and here we initialize 2 variables, pid and wpid */
         pid_t pid, wpid;
         int status;
-
         pid = fork();
         if (pid == 0) {
                 if (execvp(args[0], args) == -1) {
@@ -319,11 +304,11 @@ void mfs_loop(void) {
                 if (numparse == 1) {
                         args = pipe_split(line);
                         status = pipe_launch(args);
+                        printf("status: %d", status);
                         free(line);
                         free(args);
 
                 } else {
-                        //             mfs_pipe_line(line);
                         args = mfs_split_line(line);
                         status = mfs_execute(args);
                         free(line);
