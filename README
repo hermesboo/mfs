@@ -1,7 +1,5 @@
 My Friendly Shell :)
-====================================================================================================================================================
-
-[0] PIPING!
+========================================================================================================================
 [x] Proper CD function
 [x] Show PWD
 [x] Show hostname
@@ -10,6 +8,13 @@ My Friendly Shell :)
 [x] Hide password with SU
 [x] Be able to execute nano
 [x] Be able to execute NCDU
+[0] PIPING!
+[] Even MORE colors
 [] Implement a TOML file to handle customization
 [] Browse history with keys
 [] Key functionality
+
+========================================================================================================================
+[x] - Available
+[/] - Partial
+[0] - On hold
