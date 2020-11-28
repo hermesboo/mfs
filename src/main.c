@@ -206,6 +206,8 @@ int pipe_launch(char **args) {
         pipe(fd);
         pid = fork();
 
+        int savestdin = dup(0), savestdout = dup(1);
+
         /* error handling */
         if (pid == -1) {
                 perror("couldnt fork\n");
@@ -218,8 +220,9 @@ int pipe_launch(char **args) {
         } else {  // parent process
                 dup2(fd[0], 0);
                 close(fd[1]);
-                close(fd[0]);
+                dup2(savestdout, STDOUT_FILENO); /* reconnect stdout */
                 execvp(wc[0], wc);
+                dup2(savestdin, STDIN_FILENO);
         }
         printf("PID numb: %d\n", pid);
         return 1;
