@@ -108,9 +108,9 @@ char *mfs_read_line(void) {
 int parsing(char *line) {
         int i = 0;
         while (line[i] != '\0') {
-                printf("main loop:%c\n", line[i]);
+                // printf("main loop:%c\n", line[i]);
                 if (line[i] == '|') {
-                        printf("hahahah u bitch\n");
+                        //      printf("hahahah u bitch\n");
                         return 1;
                 }
                 i++;
@@ -193,10 +193,10 @@ char **mfs_split_line(char *line) {
                  * function works */
                 token = strtok(NULL, TOKEN_DELIMITER);
         }
-        while (kenke < position) {
-                printf("Tokenized test: %s\n", tokens[kenke]);
-                kenke++;
-        }
+        /*          while (kenke < position) {
+                        printf("Tokenized test: %s\n", tokens[kenke]);
+                        kenke++;
+                }*/
         tokens[position] = NULL;
         return tokens;
 }
