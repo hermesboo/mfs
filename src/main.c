@@ -211,7 +211,7 @@ int pipe_launch(char **args) {
         int argsize = sizeof(args) / sizeof(int);
         printf("argument size:%d\n", argsize);
 
-        chucha = popen("echo \" wtf\" | lolcat", "r");
+        chucha = popen("ls | lolcat", "r");
 
         while ((jaja = fgetc(chucha)) != EOF) {
                 putchar(jaja);
