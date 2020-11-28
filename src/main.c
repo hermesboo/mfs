@@ -197,8 +197,6 @@ int pipe_launch(char **args) {
         int fd[2];
         int status;
         int argsize = sizeof(args) / sizeof(int);
-        int savestdin = dup(0);
-        int savestdout = dup(1);
         char *ls[] = {"ls", 0};
         char *wc[] = {"wc", "-l", 0};
 
@@ -217,21 +215,13 @@ int pipe_launch(char **args) {
                 close(fd[0]);
                 close(fd[1]);
                 execvp(ls[0], ls);
-                return 1;
         } else {  // parent process
                 dup2(fd[0], 0);
                 close(fd[1]);
                 close(fd[0]);
-
-                dup2(savestdout, 1);
-                dup2(savestdin, 0);
-                printf("testing this bitch\n");
                 execvp(wc[0], wc);
         }
         printf("PID numb: %d\n", pid);
-        close(savestdin);
-        close(savestdout);
-
         return 1;
 }
 
@@ -239,6 +229,7 @@ int mfs_launch(char **args) {
         /* the type is pid_t and here we initialize 2 variables, pid and wpid */
         pid_t pid, wpid;
         int status;
+
         pid = fork();
         if (pid == 0) {
                 if (execvp(args[0], args) == -1) {
